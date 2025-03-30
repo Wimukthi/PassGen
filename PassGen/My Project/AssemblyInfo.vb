@@ -11,14 +11,14 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyTitle("PassGen")> 
 <Assembly: AssemblyDescription("Strong Password Generator for Windows/Linux")> 
 <Assembly: AssemblyCompany("Grey Element Software")> 
-<Assembly: AssemblyProduct("PassGen")> 
-<Assembly: AssemblyCopyright("Copyright ©  2012 Wimukthi Bandara")> 
+<Assembly: AssemblyProduct("PassGen")>
+<Assembly: AssemblyCopyright("Copyright ©  2019 Wimukthi Bandara")>
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
-<Assembly: Guid("14237789-6b53-43ff-b491-2c4468796c0a")> 
+<Assembly: Guid("14237789-6b53-43ff-b491-2c4468796c0a")>
 
 ' Version information for an assembly consists of the following four values:
 '
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("1.0.*")> 
 
-<Assembly: AssemblyVersion("1.3.0.300")> 
-<Assembly: AssemblyFileVersion("1.3.0.300")> 
+<Assembly: AssemblyVersion("1.4.69.1020")>
+<Assembly: AssemblyFileVersion("1.4.69.1020")>
