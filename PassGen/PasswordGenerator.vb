@@ -57,41 +57,55 @@ Public Class PasswordGenerator
     ''' <param name="length">The desired length of the password.</param>
     ''' <returns>The generated password string, or an empty string if the character set is empty, length is invalid, or an error occurs.</returns>
     Public Function GeneratePassword(characterSet As String, length As Integer) As String
+        ' Validate inputs: Cannot generate if no characters are allowed or length is non-positive.
         If String.IsNullOrEmpty(characterSet) OrElse length <= 0 Then
             Return "" ' Cannot generate password with empty set or invalid length
         End If
 
         Dim passwordBuilder As New StringBuilder()
         Try
+            ' Use a cryptographically secure RNG for better randomness than System.Random.
             Using rng As RandomNumberGenerator = RandomNumberGenerator.Create()
-                Dim randomBytes(3) As Byte ' 4 bytes for a UInt32
-                Dim rangeUpperBound As UInteger = CUInt(characterSet.Length) ' Exclusive upper bound for index
-                ' Calculate maxMultiple outside the loop for efficiency
-                Dim maxMultiple As UInteger = UInt32.MaxValue - (UInt32.MaxValue Mod rangeUpperBound) ' For unbiased sampling
+                Dim randomBytes(3) As Byte ' Allocate buffer for 4 random bytes (to form a UInt32).
+                Dim rangeUpperBound As UInteger = CUInt(characterSet.Length) ' The number of possible characters (exclusive upper bound for index).
 
+                ' --- Rejection Sampling Setup ---
+                ' Calculate the largest multiple of rangeUpperBound that is less than or equal to UInt32.MaxValue.
+                ' This is used to ensure an unbiased selection of characters.
+                ' If we simply used `randomUInt32 Mod rangeUpperBound`, characters corresponding to lower indices
+                ' would be slightly more likely if rangeUpperBound doesn't divide UInt32.MaxValue evenly.
+                Dim maxMultiple As UInteger = UInt32.MaxValue - (UInt32.MaxValue Mod rangeUpperBound)
+
+                ' Loop to generate each character of the password.
                 For i As Integer = 0 To (length - 1)
                     Dim randomIndex As Integer
+                    ' --- Rejection Sampling Loop ---
+                    ' Keep generating random numbers until we get one within the unbiased range.
                     Do
-                        rng.GetBytes(randomBytes) ' Fill with random bytes
-                        Dim randomUInt32 As UInt32 = BitConverter.ToUInt32(randomBytes, 0)
+                        rng.GetBytes(randomBytes) ' Fill the buffer with cryptographically secure random bytes.
+                        Dim randomUInt32 As UInt32 = BitConverter.ToUInt32(randomBytes, 0) ' Convert bytes to an unsigned 32-bit integer.
 
-                        ' Rejection sampling to avoid bias: ensures uniform distribution
-                        If randomUInt32 >= maxMultiple Then Continue Do ' Value is in the biased range, retry
+                        ' Check if the generated number falls into the 'biased' range (>= maxMultiple).
+                        ' If it does, discard it and generate a new random number (Continue Do).
+                        ' This ensures that all numbers within the valid range [0, maxMultiple - 1] are equally likely.
+                        If randomUInt32 >= maxMultiple Then Continue Do
 
-                        ' Value is acceptable, map it to the desired range
+                        ' The number is within the unbiased range. Map it to a valid index in the characterSet.
+                        ' The modulo operation now provides a uniform distribution across all possible indices [0, rangeUpperBound - 1].
                         randomIndex = CInt(randomUInt32 Mod rangeUpperBound)
-                        Exit Do ' Found a suitable index
-                    Loop
+                        Exit Do ' Found a suitable, unbiased index. Exit the inner Do loop.
+                    Loop ' End of rejection sampling loop.
 
-                    passwordBuilder.Append(characterSet(randomIndex)) ' Append character using 0-based index
-                Next
-            End Using ' Dispose the RNG
+                    ' Append the randomly selected character to the password builder.
+                    passwordBuilder.Append(characterSet(randomIndex)) ' Append character using 0-based index.
+                Next ' Move to the next character position.
+            End Using ' Dispose the RNG automatically.
         Catch ex As Exception
             _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error during password generation in PasswordGenerator")
-            Return String.Empty ' Return empty on error
+            Return String.Empty ' Return empty string on error.
         End Try
 
-        Return passwordBuilder.ToString()
+        Return passwordBuilder.ToString() ' Return the complete generated password.
     End Function
 
 End Class

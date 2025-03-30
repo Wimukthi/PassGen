@@ -1,6 +1,3 @@
-Imports System.Text
-Imports System.Collections.Generic ' Required for HashSet
-
 Public Class EntropyCalculator
 
     Private _errorLogger As ErrorLogger
@@ -15,58 +12,30 @@ Public Class EntropyCalculator
     End Sub
 
     ''' <summary>
-    ''' Counts the number of unique characters within a given password string.
-    ''' </summary>
-    ''' <param name="password">The password string to analyze.</param>
-    ''' <returns>The count of unique characters, or 0 if the password is null/empty or an error occurs.</returns>
-    Public Function CountUniqueCharacters(password As String) As Integer
-        If String.IsNullOrEmpty(password) Then Return 0
-
-        Dim uniqueCount As Integer = 0
-        ' Use a HashSet for efficient tracking of unique characters
-        Dim uniqueChars As New HashSet(Of Char)()
-
-        Try
-            For Each c As Char In password
-                ' Add returns true if the character was not already present
-                If uniqueChars.Add(c) Then
-                    uniqueCount += 1
-                End If
-            Next
-        Catch ex As Exception
-            _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error counting unique characters in EntropyCalculator")
-            Return 0 ' Return 0 on error
-        End Try
-
-        Return uniqueCount
-    End Function
-
-    ''' <summary>
-    ''' Calculates the password entropy in bits.
+    ''' Calculates the password entropy in bits using the standard formula.
     ''' Entropy = L * log2(N)
-    ''' Where L is the password length and N is the number of unique characters in the pool (size of the character set used).
-    ''' Note: The original implementation calculated entropy based on unique characters *in the generated password*, 
-    ''' which is different from the standard definition based on the *pool* of possible characters.
-    ''' This implementation retains the original logic for consistency, using uniqueCharacterCount from the generated password.
+    ''' Where L is the password length and N is the size of the character set pool used for generation.
     ''' </summary>
-    ''' <param name="passwordLength">The length of the password.</param>
-    ''' <param name="uniqueCharacterCount">The number of unique characters found *within* the generated password.</param>
-    ''' <returns>The calculated entropy in bits, or 0 if inputs are invalid or an error occurs.</returns>
-    Public Function CalculateEntropy(passwordLength As Integer, uniqueCharacterCount As Integer) As Double
-        If passwordLength <= 0 OrElse uniqueCharacterCount <= 0 Then
+    ''' <param name="passwordLength">The length of the password (L).</param>
+    ''' <param name="characterSetSize">The total number of possible characters in the pool (N).</param>
+    ''' <returns>The calculated entropy in bits, or 0.0 if inputs are invalid or an error occurs.</returns>
+    Public Function CalculateEntropy(passwordLength As Integer, characterSetSize As Integer) As Double
+        ' Validate inputs: Length and character set size must be positive.
+        ' A character set size of 1 means log2(1) = 0 entropy, which is valid but results in 0.
+        If passwordLength <= 0 OrElse characterSetSize <= 0 Then
             Return 0.0
         End If
 
         Try
-            ' Handle the edge case where uniqueCharacterCount is 1 (log2(1) = 0)
-            If uniqueCharacterCount = 1 Then Return 0.0
+            ' Handle the edge case where characterSetSize is 1 (log2(1) = 0)
+            If characterSetSize = 1 Then Return 0.0
 
             ' Calculate entropy using Log base 2: L * Log2(N) = L * (Log(N) / Log(2))
-            Dim entropy As Double = CDbl(passwordLength) * Math.Log(CDbl(uniqueCharacterCount)) / Math.Log(2.0)
+            Dim entropy As Double = CDbl(passwordLength) * Math.Log(CDbl(characterSetSize)) / Math.Log(2.0)
             Return entropy
         Catch ex As Exception
             _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error calculating entropy in EntropyCalculator")
-            Return 0.0 ' Return 0 on error
+            Return 0.0 ' Return 0.0 on error
         End Try
     End Function
 

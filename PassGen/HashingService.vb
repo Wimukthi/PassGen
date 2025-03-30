@@ -23,7 +23,7 @@ Public Class HashingService
         If plainText Is Nothing Then plainText = "" ' Handle null input gracefully
 
         Try
-            Using md5Provider As New MD5CryptoServiceProvider()
+            Using md5Provider As MD5 = MD5.Create() ' Use static factory method
                 Dim plainTextBytes As Byte() = Encoding.UTF8.GetBytes(plainText)
                 Dim hashBytes As Byte() = md5Provider.ComputeHash(plainTextBytes)
                 Return Convert.ToBase64String(hashBytes)
@@ -43,7 +43,7 @@ Public Class HashingService
         If plainText Is Nothing Then plainText = "" ' Handle null input gracefully
 
         Try
-            Using sha256Provider As New SHA256Managed()
+            Using sha256Provider As SHA256 = SHA256.Create() ' Use static factory method
                 Dim plainTextBytes As Byte() = Encoding.UTF8.GetBytes(plainText)
                 Dim hashBytes As Byte() = sha256Provider.ComputeHash(plainTextBytes)
                 Return Convert.ToBase64String(hashBytes)
@@ -63,7 +63,7 @@ Public Class HashingService
         If plainText Is Nothing Then plainText = "" ' Handle null input gracefully
 
         Try
-            Using sha512Provider As New SHA512Managed()
+            Using sha512Provider As SHA512 = SHA512.Create() ' Use static factory method
                 Dim plainTextBytes As Byte() = Encoding.UTF8.GetBytes(plainText)
                 Dim hashBytes As Byte() = sha512Provider.ComputeHash(plainTextBytes)
                 Return Convert.ToBase64String(hashBytes)

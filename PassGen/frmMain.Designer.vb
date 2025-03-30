@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
-Partial Class frmMain
+Partial Class FrmMain
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -23,7 +23,7 @@ Partial Class frmMain
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmMain))
         Me.txtoutput = New System.Windows.Forms.TextBox()
         Me.txtMaxLength = New System.Windows.Forms.NumericUpDown()
         Me.chkUpperCase = New System.Windows.Forms.CheckBox()
@@ -90,7 +90,7 @@ Partial Class frmMain
         Me.txtMaxLength.Location = New System.Drawing.Point(125, 441)
         Me.txtMaxLength.Maximum = New Decimal(New Integer() {20000, 0, 0, 0})
         Me.txtMaxLength.Name = "txtMaxLength"
-        Me.txtMaxLength.Size = New System.Drawing.Size(91, 21)
+        Me.txtMaxLength.Size = New System.Drawing.Size(91, 18)
         Me.txtMaxLength.TabIndex = 8
         Me.txtMaxLength.ThousandsSeparator = True
         Me.tooltips.SetToolTip(Me.txtMaxLength, "Set the Length of the password, you can use up to 20000" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "characters, however on s" &
@@ -103,9 +103,9 @@ Partial Class frmMain
         Me.chkUpperCase.AutoSize = True
         Me.chkUpperCase.Checked = True
         Me.chkUpperCase.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkUpperCase.Location = New System.Drawing.Point(7, 377)
+        Me.chkUpperCase.Location = New System.Drawing.Point(7, 380)
         Me.chkUpperCase.Name = "chkUpperCase"
-        Me.chkUpperCase.Size = New System.Drawing.Size(173, 18)
+        Me.chkUpperCase.Size = New System.Drawing.Size(150, 15)
         Me.chkUpperCase.TabIndex = 1
         Me.chkUpperCase.Text = "Upper Case Letters"
         Me.tooltips.SetToolTip(Me.chkUpperCase, "Use Upper Case characters :" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -117,9 +117,9 @@ Partial Class frmMain
         Me.chkLowerCase.AutoSize = True
         Me.chkLowerCase.Checked = True
         Me.chkLowerCase.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkLowerCase.Location = New System.Drawing.Point(163, 377)
+        Me.chkLowerCase.Location = New System.Drawing.Point(163, 380)
         Me.chkLowerCase.Name = "chkLowerCase"
-        Me.chkLowerCase.Size = New System.Drawing.Size(173, 18)
+        Me.chkLowerCase.Size = New System.Drawing.Size(150, 15)
         Me.chkLowerCase.TabIndex = 2
         Me.chkLowerCase.Text = "Lower Case Letters"
         Me.tooltips.SetToolTip(Me.chkLowerCase, "Use Lower Case characters :" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "abcdefghijklmnopqrstuvwxyz")
@@ -131,9 +131,9 @@ Partial Class frmMain
         Me.chkNumbers.AutoSize = True
         Me.chkNumbers.Checked = True
         Me.chkNumbers.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkNumbers.Location = New System.Drawing.Point(319, 377)
+        Me.chkNumbers.Location = New System.Drawing.Point(319, 380)
         Me.chkNumbers.Name = "chkNumbers"
-        Me.chkNumbers.Size = New System.Drawing.Size(85, 18)
+        Me.chkNumbers.Size = New System.Drawing.Size(73, 15)
         Me.chkNumbers.TabIndex = 3
         Me.chkNumbers.Text = "Numbers"
         Me.tooltips.SetToolTip(Me.chkNumbers, "Use Numbers :" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "0123456789")
@@ -145,9 +145,9 @@ Partial Class frmMain
         Me.chkSpecialCharacters.AutoSize = True
         Me.chkSpecialCharacters.Checked = True
         Me.chkSpecialCharacters.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkSpecialCharacters.Location = New System.Drawing.Point(409, 377)
+        Me.chkSpecialCharacters.Location = New System.Drawing.Point(409, 380)
         Me.chkSpecialCharacters.Name = "chkSpecialCharacters"
-        Me.chkSpecialCharacters.Size = New System.Drawing.Size(173, 18)
+        Me.chkSpecialCharacters.Size = New System.Drawing.Size(150, 15)
         Me.chkSpecialCharacters.TabIndex = 4
         Me.chkSpecialCharacters.Text = "Special Characters"
         Me.tooltips.SetToolTip(Me.chkSpecialCharacters, "Use Special Characters :" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "~`!@#$%^&*()_+=-{[}]|;:'<,>.?" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10))
@@ -172,9 +172,9 @@ Partial Class frmMain
         '
         Me.chkSpace.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.chkSpace.AutoSize = True
-        Me.chkSpace.Location = New System.Drawing.Point(565, 377)
+        Me.chkSpace.Location = New System.Drawing.Point(565, 380)
         Me.chkSpace.Name = "chkSpace"
-        Me.chkSpace.Size = New System.Drawing.Size(109, 18)
+        Me.chkSpace.Size = New System.Drawing.Size(94, 15)
         Me.chkSpace.TabIndex = 5
         Me.chkSpace.Text = "Use Spaces"
         Me.tooltips.SetToolTip(Me.chkSpace, "Use Spaces When Generating the Password")
@@ -184,9 +184,9 @@ Partial Class frmMain
         '
         Me.chkCustomChars.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.chkCustomChars.AutoSize = True
-        Me.chkCustomChars.Location = New System.Drawing.Point(7, 403)
+        Me.chkCustomChars.Location = New System.Drawing.Point(7, 406)
         Me.chkCustomChars.Name = "chkCustomChars"
-        Me.chkCustomChars.Size = New System.Drawing.Size(221, 18)
+        Me.chkCustomChars.Size = New System.Drawing.Size(192, 15)
         Me.chkCustomChars.TabIndex = 6
         Me.chkCustomChars.Text = "Inject Custom Characters"
         Me.tooltips.SetToolTip(Me.chkCustomChars, "You can use the adjacent text field to inject any other character you like to the" &
@@ -202,7 +202,7 @@ Partial Class frmMain
         Me.txtCustomChars.Font = New System.Drawing.Font("Consolas", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.txtCustomChars.Location = New System.Drawing.Point(205, 401)
         Me.txtCustomChars.Name = "txtCustomChars"
-        Me.txtCustomChars.Size = New System.Drawing.Size(868, 24)
+        Me.txtCustomChars.Size = New System.Drawing.Size(868, 20)
         Me.txtCustomChars.TabIndex = 7
         Me.txtCustomChars.Text = "ĊøúüþĦĤĦŐŞåæÊÈÆ"
         Me.tooltips.SetToolTip(Me.txtCustomChars, "Enter any Custom Characters here, Given is only a Example." & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Use these with cautio" &
@@ -299,7 +299,7 @@ Partial Class frmMain
         Me.txtPassAmount.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
         Me.txtPassAmount.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
         Me.txtPassAmount.Name = "txtPassAmount"
-        Me.txtPassAmount.Size = New System.Drawing.Size(91, 21)
+        Me.txtPassAmount.Size = New System.Drawing.Size(91, 18)
         Me.txtPassAmount.TabIndex = 36
         Me.txtPassAmount.ThousandsSeparator = True
         Me.tooltips.SetToolTip(Me.txtPassAmount, "Set the Length of the password, you can use up to 20000" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "characters, however on s" &
@@ -446,9 +446,9 @@ Partial Class frmMain
         Me.Label5.TabIndex = 37
         Me.Label5.Text = "Number of Passwords"
         '
-        'frmMain
+        'FrmMain
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 14.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 11.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1084, 477)
         Me.Controls.Add(Me.Label5)
@@ -479,7 +479,7 @@ Partial Class frmMain
         Me.Font = New System.Drawing.Font("Lucida Console", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MinimumSize = New System.Drawing.Size(980, 468)
-        Me.Name = "frmMain"
+        Me.Name = "FrmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         CType(Me.txtMaxLength, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.txtPassAmount, System.ComponentModel.ISupportInitialize).EndInit()
