@@ -1,85 +1,85 @@
-# Password Generation Optimization Plan
+# Dark Mode Implementation Plan for PassGen
 
-## Problem
+This document outlines the plan to implement a dark mode feature for the PassGen VB.NET WinForms application.
 
-Currently, when generating multiple passwords, the application adds each password and its details (entropy, hashes) to the `ListView` (`lstvKeys`) immediately after it's generated and processed. This happens within the `threadEntropy_RunWorkerCompleted` event handler, which then triggers the next password generation cycle if more are needed. Updating the UI (`ListView.Items.Add`) repeatedly within this loop causes significant performance degradation and UI slowdown, especially for large batches of passwords.
+## Requirements
 
-## Proposed Solution: Batch Processing and Single UI Update
+*   Allow users to switch between Light, Dark, and System themes.
+*   Persist the user's theme choice across application sessions.
+*   Use standard dark theme colors (dark gray backgrounds, light text).
+*   Attempt to follow the Windows theme when "System" mode is selected.
 
-The core idea is to decouple the generation/processing logic from the UI updates. We will generate all requested passwords and their associated data in the background first, store them temporarily, and then update the `ListView` in a single, efficient operation.
+## Plan Details
 
-**Steps:**
+1.  **Define Color Palettes:**
+    *   **Light Mode:** Based on current defaults (e.g., `SystemColors.Control`, `SystemColors.Window`, `SystemColors.ControlText`).
+    *   **Dark Mode:** Standard dark theme (e.g., `Color.FromArgb(45, 45, 48)` for backgrounds, `Color.White` or `Color.LightGray` for text).
+    *   **System Mode:** Logic to detect the current Windows theme (light or dark) and apply the corresponding palette.
 
-1.  **Modify Background Logic (`frmMain.vb`):**
-    *   Adjust the `BackgroundWorker` logic (either reuse `bwgen` and `threadEntropy` in a modified flow, or potentially introduce a new worker specifically for batch jobs).
-    *   The worker will be responsible for the entire batch generation loop.
-    *   **Before the loop:** Call `_passwordGenerator.BuildCharacterSet` once to get the character pool based on user selections.
-    *   **Inside the loop (running `TotalKeysInBatch` times):**
-        *   Call `_passwordGenerator.GeneratePassword` to get a password string.
-        *   Call `_entropyCalculator.CalculateEntropy` to get the entropy value.
-        *   Call `_hashingService` methods (`GenerateMD5Hash`, `GenerateSHA256Hash`, `GenerateSHA512Hash`) to get the hashes.
-        *   Create a simple data structure or class (e.g., `PasswordData`) to hold the password string, calculated entropy string (e.g., "85 bits (Strong)"), length, and the three hashes.
-        *   Add this `PasswordData` object to a temporary collection (e.g., `List(Of PasswordData)`).
-        *   **Progress Reporting:** Periodically report progress (e.g., using `ReportProgress`) so the `progGen` progress bar can be updated smoothly during the batch operation. This avoids the UI appearing frozen.
-    *   **After the loop:** Pass the complete `List(Of PasswordData)` back as the `Result` of the `BackgroundWorker`.
+2.  **Create `ThemeManager`:**
+    *   A central class/module to manage theming logic.
+    *   Store Light, Dark, and System theme settings.
+    *   Include logic to detect the Windows theme (potentially using .NET 8 APIs or P/Invoke if needed).
+    *   Implement `ApplyTheme(Control container)` to recursively style controls based on the active theme.
+    *   Include specific logic to handle controls requiring special styling (e.g., `ListView`, `ProgressBar`).
 
-2.  **Modify UI Update Logic (`frmMain.vb`):**
-    *   In the `RunWorkerCompleted` event handler for the batch worker:
-        *   Check for errors or cancellation as usual.
-        *   Retrieve the `List(Of PasswordData)` from `e.Result`.
-        *   Create a new `List(Of ListViewItem)`.
-        *   Iterate through the `List(Of PasswordData)`. For each `PasswordData` object, create a corresponding `ListViewItem` and add its subitems (Password, Entropy String, Length, Hashes).
-        *   **Crucially:** Use `lstvKeys.Items.AddRange(listOfListViewItems)` to add *all* the generated items to the `ListView` in a single operation. This is much more performant than adding items one by one.
-        *   Update the final status message (e.g., "Batch Complete").
+3.  **Implement Theme Switching:**
+    *   Add a "View" top-level menu item to `frmMain`.
+    *   Add a "Theme" submenu under "View".
+    *   Add radio-button-style menu items for "Light", "Dark", and "System" within the "Theme" submenu.
+    *   When a theme menu item is selected:
+        *   Update the `ThemeManager`'s active theme setting.
+        *   Call the `ApplyTheme` function for all open forms.
+        *   Save the user's *choice* (Light/Dark/System) using `My.Settings`.
 
-**Visual Plan (Mermaid):**
+4.  **Integrate Theming into Forms:**
+    *   In the `Load` event of each form (`frmMain`, `frmAbout`):
+        *   Load the saved theme preference from `My.Settings`.
+        *   Determine the effective theme (if "System" is chosen, detect the OS theme).
+        *   Apply the initial theme using the `ThemeManager`.
+    *   Listen for OS theme change events (if implementing System mode reliably) to update the UI dynamically when the "System" option is active.
+    *   Review and potentially remove hardcoded colors in designer files if they conflict with the theme manager's logic.
+
+5.  **Handle Specific Controls:**
+    *   **`ListView` (`lstvKeys`):** May require `OwnerDraw = True` and manual drawing for proper coloring in both modes. Investigate default `BackColor`/`ForeColor` first.
+    *   **`TextBox`, Labels styled as TextBoxes:** Ensure `BackColor`, `ForeColor`, and `BorderStyle` are correctly themed.
+    *   **`ProgressBar`:** Standard controls are hard to theme; may need to accept default appearance or use custom controls.
+    *   **Buttons, Checkboxes, etc.:** Apply consistent colors from the palettes.
+
+## Visual Representation (Mermaid Diagram)
 
 ```mermaid
 graph TD
-    A[Start Generation (btnGenerate_Click)] --> B{Initiate Batch Worker};
-    B --> C[Loop N Times (N = TotalKeysInBatch)];
-    C --> D[Generate Password];
-    D --> E[Calculate Entropy];
-    E --> F[Calculate Hashes];
-    F --> G[Store Data (Password, Entropy, Hashes) in Temp List];
-    G --> H{Report Progress?};
-    H -- Yes --> I[Update Progress Bar (via ReportProgress)];
-    I --> C;
-    H -- No --> C;
-    C -- Loop Finished --> J[Worker Completed (Result = Temp List)];
-    J --> K[Create ListViewItems from Temp List];
-    K --> L[Update ListView (AddRange)];
-    L --> M[Update Final Status];
-
-    subgraph Background Worker
-        direction LR
-        C
-        D
-        E
-        F
-        G
-        H
-        I
+    subgraph User Interaction
+        A[User Action: Select Theme Menu (Light/Dark/System)] --> B{Update ThemeManager State};
     end
 
-    subgraph UI Thread (Event Handlers)
-        direction LR
-        A
-        B
-        J[RunWorkerCompleted]
-        K
-        L
-        M
+    subgraph Theme Management
+        B --> C{Persist Setting (My.Settings)};
+        B --> D[Apply Theme to All Open Forms];
+        D --> E[ThemeManager.ApplyTheme(Form)];
+        E -- Iterates through --> F(Controls on Form);
+        F -- Sets --> G[BackColor, ForeColor, etc.];
+        G -- Handles --> H(Special Controls e.g., ListView);
+
+        ThemeManagerClass[ThemeManager Class]:::TMClass
+        ThemeManagerClass -- Contains --> CurrentThemeSetting((User Setting: Light/Dark/System))
+        ThemeManagerClass -- Contains --> Palettes{Light & Dark Palettes}
+        ThemeManagerClass -- Contains --> ApplyMethod(ApplyTheme Method)
+        ThemeManagerClass -- Contains --> DetectOSTheme(Detect OS Theme Method)
+        ThemeManagerClass -- Contains --> ListenOSTheme(Listen for OS Theme Change)
+
+        style ThemeManagerClass fill:#f9f,stroke:#333,stroke-width:2px
+        classDef TMClass fill:#f9f,stroke:#333,stroke-width:2px
     end
-```
 
-## Supporting Classes
+    subgraph Application Lifecycle
+        I[App Startup] --> J{Load Saved Setting (My.Settings)};
+        J --> K[Set Initial ThemeManager State];
+        K -- If System Setting --> L[DetectOSTheme];
+        L --> D;
+        K -- If Light/Dark Setting --> D;
+        M[OS Theme Change Event] -- If System Setting Active --> L;
+    end
 
-*   **`PasswordGenerator.vb`:** Confirmed suitable. `BuildCharacterSet` called once, `GeneratePassword` called repeatedly in the loop.
-*   **`EntropyCalculator.vb`:** Assumed suitable. `CalculateEntropy` called in the loop.
-*   **`HashingService.vb`:** Assumed suitable. Hashing methods called in the loop.
-
-## Benefits
-
-*   **Performance:** Drastically reduces UI update overhead, leading to much faster batch generation.
-*   **Responsiveness:** Keeps the UI thread freer during generation, improving perceived application responsiveness.
+    C --> J;

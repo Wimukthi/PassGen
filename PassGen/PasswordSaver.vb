@@ -15,84 +15,94 @@ Public Class PasswordSaver
     End Sub
 
     ''' <summary>
-    ''' Saves the provided list of password data to the specified file path using a specific tagged format.
+    ''' Writes the data for a single ListViewItem to the StreamWriter in the specific tagged format.
+    ''' </summary>
+    ''' <param name="writer">The StreamWriter to write to.</param>
+    ''' <param name="item">The ListViewItem containing the password data.</param>
+    Private Sub WritePasswordDataTagged(writer As StreamWriter, item As ListViewItem)
+        ' Ensure the item has enough subitems (columns) to prevent index out-of-bounds errors.
+        If item.SubItems.Count >= 7 Then
+            ' Extract data from the relevant ListViewItem sub-items based on column index.
+            Dim password As String = item.SubItems(1).Text
+            Dim md5Hash As String = item.SubItems(4).Text
+            Dim sha256Hash As String = item.SubItems(5).Text
+            Dim sha512Hash As String = item.SubItems(6).Text
+
+            ' --- Write data for this password in the specific tagged format ---
+            writer.WriteLine("<Key-Start>")
+            writer.WriteLine(password)
+            writer.WriteLine("<Key-End>")
+            writer.WriteLine()
+
+            writer.WriteLine("<MD5-Start>")
+            writer.WriteLine(md5Hash)
+            writer.WriteLine("<MD5-End>")
+            writer.WriteLine()
+
+            writer.WriteLine("<SHA256-Start>")
+            writer.WriteLine(sha256Hash)
+            writer.WriteLine("<SHA256-End>")
+            writer.WriteLine()
+
+            writer.WriteLine("<SHA512-Start>")
+            writer.WriteLine(sha512Hash)
+            writer.WriteLine("<SHA512-End>")
+            writer.WriteLine()
+
+            writer.WriteLine("--------------------") ' Separator line between different password entries.
+            writer.WriteLine()
+        Else
+            ' Log a warning if a ListViewItem doesn't have the expected structure.
+            _errorLogger?.WriteToErrorLog("ListViewItem skipped during save due to insufficient SubItems.", $"Item Index: {item.Index}", "Password Save Warning")
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Saves ALL provided password data to the specified file path using the tagged format.
     ''' </summary>
     ''' <param name="filePath">The full path of the file to save to.</param>
-    ''' <param name="passwordItems">A ListView.ListViewItemCollection containing the password data to save.
-    ''' Each item's SubItems should correspond to: Index(0), Password(1), Entropy(2), Length(3), MD5(4), SHA256(5), SHA512(6).</param>
+    ''' <param name="passwordItems">A ListView.ListViewItemCollection containing ALL password data to save.</param>
     ''' <returns>True if saving was successful, False otherwise.</returns>
     Public Function SavePasswordsToFile(filePath As String, passwordItems As ListView.ListViewItemCollection) As Boolean
-        ' Validate inputs: Ensure file path is provided and there are items to save.
         If String.IsNullOrWhiteSpace(filePath) OrElse passwordItems Is Nothing OrElse passwordItems.Count = 0 Then
-            Return False ' Nothing to save or invalid path
+            Return False
         End If
 
-        Dim success As Boolean = False
-        Dim streamSavePass As StreamWriter = Nothing ' Initialize to Nothing for Finally block safety.
+        Try
+            Using writer As New StreamWriter(filePath, False, System.Text.Encoding.UTF8) ' Overwrite, UTF8
+                For Each item As ListViewItem In passwordItems
+                    WritePasswordDataTagged(writer, item) ' Call the helper method
+                Next
+            End Using
+            Return True
+        Catch ex As Exception
+            _errorLogger?.WriteToErrorLog($"Error saving all passwords to file '{filePath}': {ex.Message}", ex.StackTrace, "SavePasswordsToFile Error")
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Saves ONLY the SELECTED password data to the specified file path using the tagged format.
+    ''' </summary>
+    ''' <param name="filePath">The full path to the file where passwords should be saved.</param>
+    ''' <param name="selectedItems">The collection of SELECTED ListViewItems containing password data.</param>
+    ''' <returns>True if saving was successful, False otherwise.</returns>
+    Public Function SaveSelectedPasswordsToFile(filePath As String, selectedItems As ListView.SelectedListViewItemCollection) As Boolean
+        If String.IsNullOrWhiteSpace(filePath) OrElse selectedItems Is Nothing OrElse selectedItems.Count = 0 Then
+            Return False
+        End If
 
         Try
-            ' Open the file for writing. Creates the file if it doesn't exist, overwrites it if it does.
-            ' Consider using a Using block for automatic disposal, though the Finally block handles it here.
-            streamSavePass = New StreamWriter(filePath)
-
-            ' Iterate through each ListViewItem representing a generated password.
-            For Each item As ListViewItem In passwordItems
-                ' Ensure the item has enough subitems (columns) to prevent index out-of-bounds errors.
-                If item.SubItems.Count >= 7 Then
-                    ' Extract data from the relevant ListViewItem sub-items based on column index.
-                    Dim password As String = item.SubItems(1).Text
-                    ' Dim entropy As String = item.SubItems(2).Text ' Entropy text is not saved in this format.
-                    ' Dim length As String = item.SubItems(3).Text  ' Length is not saved in this format.
-                    Dim md5Hash As String = item.SubItems(4).Text
-                    Dim sha256Hash As String = item.SubItems(5).Text
-                    Dim sha512Hash As String = item.SubItems(6).Text
-
-                    ' --- Write data for this password in the specific tagged format ---
-                    ' Each piece of data is enclosed in start/end tags on separate lines.
-                    ' Blank lines are added for readability between blocks.
-
-                    streamSavePass.WriteLine("<Key-Start>") ' Start tag for the password itself.
-                    streamSavePass.WriteLine(password)
-                    streamSavePass.WriteLine("<Key-End>")   ' End tag for the password.
-                    streamSavePass.WriteLine()              ' Blank line separator.
-
-                    streamSavePass.WriteLine("<MD5-Start>") ' Start tag for the MD5 hash.
-                    streamSavePass.WriteLine(md5Hash)
-                    streamSavePass.WriteLine("<MD5-End>")   ' End tag for the MD5 hash.
-                    streamSavePass.WriteLine()              ' Blank line separator.
-
-                    streamSavePass.WriteLine("<SHA256-Start>") ' Start tag for the SHA256 hash.
-                    streamSavePass.WriteLine(sha256Hash)
-                    streamSavePass.WriteLine("<SHA256-End>")   ' End tag for the SHA256 hash.
-                    streamSavePass.WriteLine()                ' Blank line separator.
-
-                    streamSavePass.WriteLine("<SHA512-Start>") ' Start tag for the SHA512 hash.
-                    streamSavePass.WriteLine(sha512Hash)
-                    streamSavePass.WriteLine("<SHA512-End>")   ' End tag for the SHA512 hash.
-                    streamSavePass.WriteLine()                ' Blank line separator.
-
-                    streamSavePass.WriteLine("--------------------") ' Separator line between different password entries.
-                    streamSavePass.WriteLine()                      ' Blank line after separator.
-                Else
-                    ' Log a warning if a ListViewItem doesn't have the expected structure (e.g., fewer than 7 columns).
-                    _errorLogger.WriteToErrorLog("ListViewItem skipped during save due to insufficient SubItems.", $"Item Index: {item.Index}", "Password Save Warning")
-                End If
-            Next ' Move to the next password item.
-
-            success = True ' Mark as successful if the loop completes without throwing an exception.
+            Using writer As New StreamWriter(filePath, False, System.Text.Encoding.UTF8) ' Overwrite, UTF8
+                For Each item As ListViewItem In selectedItems
+                    WritePasswordDataTagged(writer, item) ' Call the SAME helper method
+                Next
+            End Using
+            Return True
         Catch ex As Exception
-            ' Handle potential file I/O errors (e.g., disk full, permissions issues).
-            _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error saving passwords to file in PasswordSaver")
-            success = False ' Ensure success is false if an error occurred.
-        Finally
-            ' Ensure the StreamWriter is always closed and disposed, even if an error occurred.
-            If streamSavePass IsNot Nothing Then
-                streamSavePass.Close()
-                streamSavePass.Dispose() ' Explicitly dispose to release resources.
-            End If
+             _errorLogger?.WriteToErrorLog($"Error saving selected passwords to file '{filePath}': {ex.Message}", ex.StackTrace, "SaveSelectedPasswordsToFile Error")
+            Return False
         End Try
-
-        Return success ' Return the success status.
     End Function
 
 End Class

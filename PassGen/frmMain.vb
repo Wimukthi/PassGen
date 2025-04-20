@@ -14,6 +14,11 @@ Public Class FrmMain ' IDE1006: Renamed class
     Private _hashingService As HashingService
     Private _passwordSaver As PasswordSaver
 
+    ' --- Context Menu for Password List ---
+    Private WithEvents cmsPasswordList As ContextMenuStrip
+    Private WithEvents tsmiCopyPassword As ToolStripMenuItem
+    Private WithEvents tsmiSaveSelectedPasswords As ToolStripMenuItem
+
     ' --- State Variables ---
     Public Plength As Integer = 35 ' Stores the desired length of the password(s) for the current generation batch. Updated from UI.
     Public TotalKeysInBatch As Integer = 1 ' Stores the *total* number of passwords requested for the current batch. Updated from UI.
@@ -50,6 +55,34 @@ Public Class FrmMain ' IDE1006: Renamed class
             ' Set default values for UI controls based on initial state variables.
             txtMaxLength.Value = Plength ' Set default length in UI
             txtPassAmount.Value = TotalKeysInBatch ' Set default amount in UI
+
+            ' --- Initialize Context Menu ---
+            ' Check if components container exists, otherwise create a new one.
+            If Me.components Is Nothing Then
+                 Me.components = New System.ComponentModel.Container()
+            End If
+            Me.cmsPasswordList = New System.Windows.Forms.ContextMenuStrip(Me.components)
+            Me.tsmiCopyPassword = New System.Windows.Forms.ToolStripMenuItem()
+            Me.tsmiSaveSelectedPasswords = New System.Windows.Forms.ToolStripMenuItem()
+            Me.cmsPasswordList.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsmiCopyPassword, Me.tsmiSaveSelectedPasswords})
+            Me.cmsPasswordList.Name = "cmsPasswordList"
+            Me.cmsPasswordList.Size = New System.Drawing.Size(181, 48) ' Auto-size might adjust this later
+            '
+            ' tsmiCopyPassword
+            '
+            Me.tsmiCopyPassword.Name = "tsmiCopyPassword"
+            Me.tsmiCopyPassword.Size = New System.Drawing.Size(180, 22) ' Example size
+            Me.tsmiCopyPassword.Text = "Copy"
+            '
+            ' tsmiSaveSelectedPasswords
+            '
+            Me.tsmiSaveSelectedPasswords.Name = "tsmiSaveSelectedPasswords"
+            Me.tsmiSaveSelectedPasswords.Size = New System.Drawing.Size(180, 22) ' Example size
+            Me.tsmiSaveSelectedPasswords.Text = "Save Selected..."
+            '
+            ' Assign context menu to ListView
+            '
+            Me.lstvKeys.ContextMenuStrip = Me.cmsPasswordList
 
         Catch ex As Exception
             ' Handle potential errors during form loading.
@@ -526,6 +559,75 @@ Public Class FrmMain ' IDE1006: Renamed class
             ' Log any errors occurring within the SelectedIndexChanged handler.
             _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error in lstvKeys_SelectedIndexChanged")
         End Try
+    End Sub
+
+    ' --- Context Menu Event Handlers ---
+
+    Private Sub cmsPasswordList_Opening(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles cmsPasswordList.Opening
+        Dim hasSelection As Boolean = (lstvKeys.SelectedItems.Count > 0)
+
+        tsmiCopyPassword.Enabled = hasSelection
+        tsmiSaveSelectedPasswords.Enabled = hasSelection
+
+        ' Prevent the menu from showing if nothing is selected
+        If Not hasSelection Then
+            e.Cancel = True
+        End If
+    End Sub
+
+    Private Sub tsmiCopyPassword_Click(sender As Object, e As EventArgs) Handles tsmiCopyPassword.Click
+        If lstvKeys.SelectedItems.Count > 0 Then
+            Dim sb As New System.Text.StringBuilder()
+            For Each item As ListViewItem In lstvKeys.SelectedItems
+                ' Assuming password is in the second column (index 1)
+                If item.SubItems.Count > 1 Then
+                    sb.AppendLine(item.SubItems(1).Text)
+                End If
+            Next
+
+            If sb.Length > 0 Then
+                Try
+                    ' Remove the last newline if it exists (optional, but cleaner)
+                    If sb.ToString().EndsWith(Environment.NewLine) Then
+                         sb.Length -= Environment.NewLine.Length
+                    End If
+                    Clipboard.SetText(sb.ToString())
+                Catch ex As Exception
+                    _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error copying selected passwords to clipboard")
+                    MessageBox.Show("Could not copy text to clipboard: " & ex.Message, "Clipboard Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                End Try
+            End If
+        End If
+    End Sub
+
+    Private Sub tsmiSaveSelectedPasswords_Click(sender As Object, e As EventArgs) Handles tsmiSaveSelectedPasswords.Click
+        If lstvKeys.SelectedItems.Count = 0 Then
+            MessageBox.Show("No passwords selected to save.", "Nothing Selected", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+
+        Using saveFileDialog As New SaveFileDialog With {
+            .Filter = "Text Files(*.txt)|*.txt|All Files(*.*)|*.*", ' Added All Files option
+            .Title = "Save Selected Passwords",
+            .FileName = "SelectedPasswords.txt" ' Suggest a default filename
+        }
+            If saveFileDialog.ShowDialog() = DialogResult.OK Then
+                Try
+                    ' Call the *new* PasswordSaver service method
+                    Dim success As Boolean = _passwordSaver.SaveSelectedPasswordsToFile(saveFileDialog.FileName, lstvKeys.SelectedItems)
+
+                    If success Then
+                        MessageBox.Show($"Selected passwords saved successfully to {saveFileDialog.FileName}", "Save Successful", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    Else
+                        ' Specific error should have been logged by the service
+                        MessageBox.Show("An error occurred while saving the selected passwords. Please check the error log.", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End If
+                Catch ex As Exception
+                     _errorLogger.WriteToErrorLog(ex.Message, ex.StackTrace, "Error in tsmiSaveSelectedPasswords_Click")
+                     MessageBox.Show("An unexpected error occurred during saving: " & ex.Message, "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End Try
+            End If
+        End Using
     End Sub
 
 End Class
