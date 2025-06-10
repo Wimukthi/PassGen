@@ -84,6 +84,9 @@ Public Class FrmMain ' IDE1006: Renamed class
             '
             Me.lstvKeys.ContextMenuStrip = Me.cmsPasswordList
 
+            'Dim themeManager As New DarkThemeManager()
+            'themeManager.ApplyDarkTheme(Me)
+
         Catch ex As Exception
             ' Handle potential errors during form loading.
             ' Use the initialized logger if available, otherwise show a basic message box.
